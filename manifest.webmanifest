@@ -1,6 +1,7 @@
 {
-  "name": "My App",
-  "short_name": "My App",
+  "name": "Personal Life Manager",
+  "short_name": "Life Manager",
+  "description": "Tasks, goals, notes and wellbeing in one place.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

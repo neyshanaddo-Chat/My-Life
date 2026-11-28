@@ -3,41 +3,101 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>My App</title>
-  <meta name="theme-color" content="#ffffff">
+  <title>Life Manager</title>
+  <meta name="description" content="Personal Life Manager — tasks, goals, notes and wellbeing in one place.">
+  <meta name="theme-color" content="#ffffff" id="themeColor">
+  <script>
+    // Apply saved light/dark choice before the page draws (no flash).
+    try { if (localStorage.getItem('theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch (_) {}
+  </script>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="My App">
-  <style>
-    html, body { margin: 0; height: 100%; background: #fff; }
-    body { font-family: system-ui, -apple-system, sans-serif; color: #111; }
-    #app { min-height: 100%; }
-  </style>
+  <meta name="apple-mobile-web-app-title" content="Life Manager">
+  <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-  <!-- Blank canvas. Tools get added inside #app. -->
-  <div id="app"></div>
+  <div id="app">
+    <header class="header">
+      <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <h1 class="title">Life Manager</h1>
+      <div class="header-spacer"></div>
+    </header>
+
+    <div class="content">
+      <main class="screen" id="screen-home" aria-label="Dashboard"></main>
+      <section class="screen" id="screen-calendar" aria-label="Calendar"></section>
+      <section class="screen" id="screen-tasks" aria-label="Tasks"></section>
+      <section class="screen" id="screen-goals" aria-label="Goals"></section>
+      <section class="screen" id="screen-notes" aria-label="Notes"></section>
+      <section class="screen" id="screen-wellbeing" aria-label="Wellbeing"></section>
+      <section class="screen" id="screen-apps" aria-label="Connected apps"></section>
+      <section class="screen" id="screen-sync" aria-label="Sync and verification"></section>
+      <section class="screen" id="screen-settings" aria-label="Settings"></section>
+      <section class="screen" id="screen-about" aria-label="About">
+        <div class="page-head"><h2>About</h2></div>
+        <div class="card">
+          <p><strong>Personal Life Manager</strong> — the everyday interface to my Personal Operating System: tasks, goals, notes, journal and wellbeing in one place.</p>
+          <p class="muted small">Your data is stored privately on this device and works offline. Back it up from Settings.</p>
+          <p class="muted small" id="aboutVersion"></p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="backdrop" id="backdrop"></div>
+  <nav class="sidebar" id="sidebar" aria-label="Menu">
+    <div class="sidebar-top">
+      <h2 class="sidebar-title">Menu</h2>
+      <button class="close-btn" id="closeBtn" aria-label="Close menu">&times;</button>
+    </div>
+    <a class="nav-link" href="#home" data-screen="home"><span class="nav-icon" aria-hidden="true">⌂</span>Dashboard</a>
+    <a class="nav-link" href="#calendar" data-screen="calendar"><span class="nav-icon" aria-hidden="true">▦</span>Calendar</a>
+    <a class="nav-link" href="#tasks" data-screen="tasks"><span class="nav-icon" aria-hidden="true">☐</span>Tasks</a>
+    <a class="nav-link" href="#goals" data-screen="goals"><span class="nav-icon" aria-hidden="true">◎</span>Goals &amp; Projects</a>
+    <a class="nav-link" href="#notes" data-screen="notes"><span class="nav-icon" aria-hidden="true">✎</span>Notes &amp; Journal</a>
+    <a class="nav-link" href="#wellbeing" data-screen="wellbeing"><span class="nav-icon" aria-hidden="true">♥</span>Wellbeing</a>
+
+    <div class="nav-divider"></div>
+    <a class="nav-link" href="#apps" data-screen="apps"><span class="nav-icon" aria-hidden="true">⧉</span>Connected Apps</a>
+    <a class="nav-link" href="#sync" data-screen="sync"><span class="nav-icon" aria-hidden="true">⇄</span>Sync &amp; Verification</a>
+
+    <div class="nav-divider"></div>
+    <a class="nav-link" href="#settings" data-screen="settings"><span class="nav-icon" aria-hidden="true">⚙</span>Settings</a>
+    <a class="nav-link" href="#about" data-screen="about"><span class="nav-icon" aria-hidden="true">ⓘ</span>About</a>
+  </nav>
+
+  <div class="sheet" id="sheet"></div>
+
+  <script type="module" src="js/app.js"></script>
 
   <script>
     // ---- Auto-update: when a new version is published, the app reloads itself quietly ----
+    // APP_VERSION must match version.json — bump both on every change.
+    const APP_VERSION = '2';
+    document.getElementById('aboutVersion').textContent = 'Version ' + APP_VERSION;
     const VERSION_URL = 'version.json';
-    let current = null;
 
     async function checkForUpdate() {
       try {
         const res = await fetch(VERSION_URL + '?t=' + Date.now(), { cache: 'no-store' });
         if (!res.ok) return;
         const { version } = await res.json();
-        if (current === null) { current = version; return; }
-        if (version !== current) {
-          const reg = await navigator.serviceWorker?.getRegistration();
-          if (reg) await reg.update();
-          location.reload();
-        }
+        if (version === APP_VERSION) return;
+        // Only try once per new version, so a slow server can't cause a reload loop.
+        const key = 'reloaded-for-' + version;
+        if (sessionStorage.getItem(key)) return;
+        // Don't interrupt while a form is open; try again on the next check.
+        if (document.getElementById('sheet').classList.contains('open')) return;
+        sessionStorage.setItem(key, '1');
+        const reg = await navigator.serviceWorker?.getRegistration();
+        if (reg) await reg.update();
+        location.reload();
       } catch (_) { /* offline: keep running the downloaded copy */ }
     }
 

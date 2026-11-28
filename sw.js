@@ -1,10 +1,21 @@
 // Service worker: keeps a downloaded copy for offline use,
 // but always prefers the newest version when online.
-const CACHE = 'myapp-v1';
+const CACHE = 'life-manager-v2'; // bump if cached files change shape
 const FILES = [
   './',
   'index.html',
   'manifest.webmanifest',
+  'css/app.css',
+  'js/app.js',
+  'js/db.js',
+  'js/ui.js',
+  'js/screens/dashboard.js',
+  'js/screens/tasks.js',
+  'js/screens/goals.js',
+  'js/screens/notes.js',
+  'js/screens/wellbeing.js',
+  'js/screens/settings.js',
+  'js/screens/later.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png'
@@ -29,12 +40,13 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   if (req.url.includes('version.json')) return; // always live
   e.respondWith(
-    fetch(req)
+    // 'no-cache' makes the browser check GitHub for the newest file every time.
+    fetch(new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' }))
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy));
         return res;
       })
-      .catch(() => caches.match(req).then((r) => r || caches.match('index.html')))
+      .catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || caches.match('index.html')))
   );
 });
