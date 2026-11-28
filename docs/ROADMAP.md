@@ -24,9 +24,11 @@ one starts.
 - Notifications for reminders (where the device allows)
 - Feedback-driven polish from a week or two of real use
 
-## Stage 3 — Personal Data Hub
-- PostgreSQL + TypeScript API in Docker (`docs/hub-schema.sql`)
-- Your login; per-app / per-agent tokens with scopes
+## Stage 3 — Personal Data Hub (Hostinger VPS)
+- PostgreSQL + TypeScript API in Docker on the Hostinger VPS (`docs/hub-schema.sql`)
+- HTTPS on a subdomain of your domain
+- Your login + approved-device list (approve / deny / remove devices);
+  per-app / per-agent tokens with scopes
 - Life Manager syncs to the Hub (two-way, offline-tolerant)
 - Sync & Verification Centre becomes live: permissions, proposals,
   approve/reject, transfer history — enforced by the Hub
@@ -41,7 +43,14 @@ one starts.
 ## Later — Application Two: System Terminal
 - Separate app using the same Hub API with an admin scope.
 
-## Open decisions (need your input before Stage 3)
-1. **Where the Hub runs:** your Windows PC (most private, only reachable when
-   it's on) or your Hostinger VPS (always reachable from your phone), or both.
-2. **Backups:** where encrypted backups should go.
+## Decisions
+- **Hub runs on the Hostinger VPS** (decided 28 Nov 2026) so the Samsung phone
+  and laptop can sync from anywhere.
+- **Approved devices only:** an account login plus a list of devices you have
+  approved. New devices see "not approved" and get no data until approved from
+  an existing device. (Device make can't be detected reliably, so this is the lock.)
+- **Each device keeps its own copy** (offline-first) and syncs through the Hub
+  when signed in and online. Cloud backup is a later, optional step.
+
+## Open decisions
+1. **Backups:** where encrypted backups should go.

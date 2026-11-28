@@ -62,9 +62,8 @@ rebuild (it is just another client with an admin scope).
 - **API in TypeScript (Fastify)**: same language as the app, and n8n is also
   Node-based. Python (FastAPI) is a fine alternative if AI work leans Python;
   the API contract would be the same.
-- Runs in Docker so the same setup works on a Windows PC (local-first) or a
-  Hostinger VPS (always reachable). **Where it lives is an open decision — see
-  ROADMAP.md.**
+- Runs in Docker on the **Hostinger VPS** (decided), so phone and laptop can
+  sync from anywhere. The same container setup could also run on a PC later.
 - Draft schema: `docs/hub-schema.sql`.
 
 ### 4. Permissions, approvals and audit (enforced by the Hub)
@@ -90,8 +89,12 @@ rebuild (it is just another client with an admin scope).
 - **Local AI models:** e.g. Ollama on the PC; the Hub decides which data may go
   to cloud AI vs local AI.
 
-### 6. Authentication (Stage 3)
+### 6. Authentication and approved devices (Stage 3)
 - You: passkey or password + session on the Hub.
+- Only approved devices: each install generates a device key on first sign-in;
+  the Hub only syncs with devices on your approved list. A new device sees
+  "This device isn't approved" and receives no data until you approve it from
+  your Samsung or laptop. Preview: claude.ai/artifact/Mwqe9RhQhicv7Pk69X8ZP9
 - Apps/agents: per-client tokens, revocable, scoped, stored hashed.
 - Secrets never go in this repo or in chat.
 
